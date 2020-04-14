@@ -54,8 +54,8 @@ class A2CAgent
           return action.item<double>();
     }
 
-    void learn(torch::Tensor state, 
-               torch::Tensor next_state, 
+    void learn(torch::Tensor state,
+               torch::Tensor next_state,
                double reward,
                double action,
                torch::optim::Adam mu_optim,
@@ -96,7 +96,6 @@ class A2CAgent
         p = p.detach();
         p -= tmp;
       }
-
       //mu_optim.step();
       //sigma_optim.step();
     }
