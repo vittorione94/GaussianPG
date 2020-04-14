@@ -33,7 +33,7 @@ mjvScene scn;                       // abstract scene
 mjrContext con;                     // custom GPU context
 
 class Environment
-{  
+{
     public:
 
         FILE* fp;
@@ -53,7 +53,7 @@ class Environment
             // load and compile model
             char error[1000] = "Could not load binary model";
             m = mj_loadXML(model_name, 0, error, 1000);
-            
+
             std::cout << "model loaded" << std::endl;
 
             if( !m )
@@ -83,7 +83,7 @@ class Environment
 
             // create scene and context
             mjv_makeScene(m, &scn, 2000);
-            
+
             std::cout << "env constructed" << std::endl;
 
             if (record)
@@ -118,10 +118,8 @@ class Environment
 
                 monitor(m,d);
             }
-                        
         }
 
-        
         // return reward, next state
         std::tuple<mjtNum, std::tuple<mjtNum, mjtNum>>  step(bool record = false, double action = 0.0)
         {
@@ -130,7 +128,7 @@ class Environment
                 monitor(m,d);
 
             mj_step(m, d);
-            // apply our controls here instead of using the mjcb_control callback 
+            // apply our controls here instead of using the mjcb_control callback
             d->ctrl[0] = action;
 
             for (int i = 0; i < 6; i++){
@@ -174,7 +172,6 @@ class Environment
             closeOpenGL();
         }
 
-        
         // create OpenGL context/window
         void initOpenGL(void)
         {
@@ -331,7 +328,4 @@ class Environment
     // MuJoCo data structures
     mjModel* m = NULL;                  // MuJoCo model
     mjData* d = NULL;                   // MuJoCo data
-    
-
-    
 };
