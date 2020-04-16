@@ -43,7 +43,6 @@ class Environment
         unsigned char* rgb;
         float* depth;
 
-
         Environment(const char* model_name, bool record = false)
         {
             std::cout << model_name << std::endl;
@@ -121,27 +120,54 @@ class Environment
                         
         }
 
-        
-        // return reward, next state
-        std::tuple<mjtNum, std::tuple<mjtNum, mjtNum>>  step(bool record = false, double action = 0.0)
+        double remap (double value, double from1, double to1, double from2, double to2) {
+            return (value - from1) / (to1 - from1) * (to2 - from2) + from2;
+        }
+
+        void set_randomStart(double start_pos, double start_vel)
         {
+            d->qpos[0] = start_pos;
+            d->qvel[0] = start_vel;
+        }
+
+        /*
+         * Step function takes in input an action, applies the action in the environment
+         * and returns a reward and the next state
+         * */
+        std::tuple<mjtNum, std::tuple<double, mjtNum>>  step(bool record = false, double action = 0.0)
+        {
+            assert(action <= 2.0 || action >= -2.0);
 
             if(record)
                 monitor(m,d);
 
             mj_step(m, d);
-            // apply our controls here instead of using the mjcb_control callback 
+
+            // apply our controls here instead of using the mjcb_control callback
             d->ctrl[0] = action;
 
-            for (int i = 0; i < 6; i++){
+            // taking extra steps in the environment
+            for (int i = 0; i < 5; i++)
+            {
                 mj_step(m, d);
-
                 if(record)
                     monitor(m,d);
             }
 
-            std::tuple<mjtNum, mjtNum> next_state = std::make_tuple(d->qpos[0], d->qvel[0]);
-            mjtNum reward = -( pow(d->qpos[0],2) + 0.1* pow(d->qvel[0],2) + 0.001* pow(action, 2));
+            d->qpos[0] = std::fmod(d->qpos[0], 2*M_PI);
+
+            double theta = 0.0;
+            if (d->qpos[0] < 0.0)
+                theta = remap(d->qpos[0], 0.0, -2*M_PI, -M_PI, M_PI);
+            else
+                theta = remap(d->qpos[0], 0.0, 2*M_PI, -M_PI, M_PI);
+
+            std::tuple<double, mjtNum> next_state = std::make_tuple(d->qpos[0] , d->qvel[0]);
+
+            mjtNum reward = - std::pow( std::fmod(theta + M_PI, 2*M_PI) - M_PI, 2)
+                            - 0.05*std::pow(d->qvel[0], 2)
+                            - 0.3*std::pow(action, 2);
+
             std::tuple<mjtNum, std::tuple<mjtNum, mjtNum>>  ret = std::make_tuple(reward, next_state);
             return ret;
         }
@@ -173,7 +199,6 @@ class Environment
             // close OpenGL
             closeOpenGL();
         }
-
         
         // create OpenGL context/window
         void initOpenGL(void)
@@ -331,7 +356,5 @@ class Environment
     // MuJoCo data structures
     mjModel* m = NULL;                  // MuJoCo model
     mjData* d = NULL;                   // MuJoCo data
-    
 
-    
 };
